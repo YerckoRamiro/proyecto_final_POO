@@ -1,0 +1,1 @@
+from pago_qr()
