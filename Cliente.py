@@ -11,3 +11,5 @@ class Cliente:
     
     def Obtener_password(self):
         return self.__password
+
+print("hola")
