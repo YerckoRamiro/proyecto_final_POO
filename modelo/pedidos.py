@@ -160,15 +160,31 @@ class Pedido(ABC):
 
 
 class PedidoLocal(Pedido):
-    MESA_MIN = 1
-    MESA_MAX = 15
+    _mesa_min = 1
+    _mesa_max = 15
     # SUPUESTO: el 5 % es sobre el subtotal y cuenta los platos dentro de combos (contar_platos())
-    PLATOS_DES = 6
-    DESC_GRUPO = 0.05
+    _platos_des = 6
+    _desc_grupo = 0.05
 
     def __init__(self, mesa, cliente=None, dia=None):
         super().__init__(cliente, dia)
         self.mesa = mesa
+
+    @property
+    def mesa_min(self):
+        return self._mesa_min
+
+    @property
+    def mesa_max(self):
+        return self._mesa_max
+
+    @property
+    def platos_des(self):
+        return self._platos_des
+
+    @property
+    def desc_grupo(self):
+        return self._desc_grupo
 
     @property
     def mesa(self):
@@ -176,7 +192,7 @@ class PedidoLocal(Pedido):
 
     @mesa.setter
     def mesa(self, valor):
-        # Bloque 1: validar entre MESA_MIN y MESA_MAX
+        # Bloque 1: validar entre mesa_min y mesa_max
         self._mesa = valor
 
     def calcular_cargos(self):
@@ -184,7 +200,7 @@ class PedidoLocal(Pedido):
         pass
 
     def calcular_descuento(self):
-        # DESC_GRUPO del subtotal si contar_platos() >= PLATOS_DES
+        # desc_grupo del subtotal si contar_platos() >= platos_des
         pass
 
     def obtener_tipo(self):
@@ -199,13 +215,17 @@ class PedidoLocal(Pedido):
 
 
 class PedidoLlevar(Pedido):
-    COSTO_ENVASE = 2
+    _costo_envase = 2  # Bs por plato
 
     def __init__(self, cliente, dia=None):
         super().__init__(cliente, dia)
 
+    @property
+    def costo_envase(self):
+        return self._costo_envase
+
     def calcular_cargos(self):
-        # contar_platos() * COSTO_ENVASE (platos dentro de combos cuentan, bebidas no)
+        # contar_platos() * costo_envase (platos dentro de combos cuentan, bebidas no)
         pass
 
     def calcular_descuento(self):
@@ -221,12 +241,16 @@ class PedidoLlevar(Pedido):
 class PedidoDelivery(Pedido):
     ZONAS = {"Cercado": 8, "Quillacollo": 15, "Sacaba": 15, "Vinto": 20}
     # SUPUESTO: el minimo se mide sobre el subtotal, sin el envio
-    PEDIDO_MINIMO = 60
+    _pedido_minimo = 60
 
     def __init__(self, cliente, zona, direccion_ent, dia=None):
         super().__init__(cliente, dia)
         self.zona = zona
         self.direccion_ent = direccion_ent
+
+    @property
+    def pedido_minimo(self):
+        return self._pedido_minimo
 
     @property
     def zona(self):
@@ -257,7 +281,7 @@ class PedidoDelivery(Pedido):
         pass
 
     def validar_para_preparar(self):
-        # exige subtotal >= PEDIDO_MINIMO
+        # exige subtotal >= pedido_minimo
         pass
 
     def puede_pagar_con(self, pago):

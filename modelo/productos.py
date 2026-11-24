@@ -151,8 +151,8 @@ class ComboProducto:
 class Combo(Producto):
     MIN_PRODUCTOS = 2
     # SUPUESTO: con 2 productos no hay descuento; "3 o mas" cuenta los productos directos (un combo interno cuenta como 1)
-    MIN_PRODUCTOS_DESCUENTO = 3
-    DESCUENTO = 0.15
+    _min_producto = 3  # productos necesarios para el descuento
+    _descuento = 0.15
 
     def __init__(self, nombre, productos):
         # Opcion 1: al padre le pasamos la suma inicial (asi valida precio > 0),
@@ -163,6 +163,14 @@ class Combo(Producto):
         super().__init__(nombre, suma)
         self._productos = []
         # Bloque 1: validar minimo MIN_PRODUCTOS y agregar cada producto con agregar_producto()
+
+    @property
+    def descuento(self):
+        return self._descuento
+
+    @property
+    def min_producto(self):
+        return self._min_producto
 
     @property
     def productos(self):
@@ -177,7 +185,7 @@ class Combo(Producto):
         pass
 
     def calcular_precio(self):
-        # suma de cada ComboProducto * (1 - DESCUENTO) si hay MIN_PRODUCTOS_DESCUENTO o mas
+        # suma de cada ComboProducto * (1 - descuento) si hay min_producto o mas
         pass
 
     def esta_disponible(self, dia):

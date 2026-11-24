@@ -97,13 +97,17 @@ class PagoQr(Pago):
 
 
 class PagoTarjeta(Pago):
-    RECARGO = 0.03
+    _recargo = 0.03  # comision del 3 % a cargo del cliente
 
     def __init__(self):
         super().__init__("Tarjeta")
 
+    @property
+    def recargo(self):
+        return self._recargo
+
     def calcular_comision(self):
-        # monto_base * RECARGO (la paga el cliente)
+        # monto_base * recargo
         pass
 
     def calcular_monto(self):

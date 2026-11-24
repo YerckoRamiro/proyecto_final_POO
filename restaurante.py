@@ -31,7 +31,7 @@ class Restaurante:
         # solo los productos con esta_disponible(dia)
         pass
 
-    def registrar_cliente(self, nombre, celular):
+    def registrar_cliente(self, nombre, celular, correo, password, direccion):
         pass
 
     def buscar_cliente(self, celular):
