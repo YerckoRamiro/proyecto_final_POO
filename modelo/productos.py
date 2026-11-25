@@ -60,20 +60,22 @@ class Plato(Producto):
 
     @dias_disponibles.setter
     def dias_disponibles(self, valor):
-        # Bloque 1: validar que cada dia este en DIAS_SEMANA
+        if len(valor) == 0:
+            raise ValueError("El plato debe venderse al menos un dia")
+        for dia in valor:
+            if dia not in DIAS_SEMANA:
+                raise ValueError(f"Dia invalido: {dia}. Use: {', '.join(DIAS_SEMANA)}")
+        # guardamos una copia para que nadie cambie la lista desde fuera
         self._dias_disponibles = list(valor)
 
     def calcular_precio(self):
-        # precio del plato
-        pass
+        return round(self.precio, 2)
 
     def esta_disponible(self, dia):
-        # el dia esta en dias_disponibles
-        pass
+        return dia in self._dias_disponibles
 
     def contar_platos(self):
-        # un plato cuenta como 1
-        pass
+        return 1
 
 
 class Bebida(Producto):
