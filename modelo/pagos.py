@@ -47,27 +47,45 @@ class PagoEfectivo(Pago):
 
     @monto_recibido.setter
     def monto_recibido(self, valor):
-        # Bloque 1: validar monto > 0
-        self._monto_recibido = valor
+        try:
+            numero = float(valor)
+        except (TypeError, ValueError):
+            raise ValueError("El monto recibido debe ser un numero")
+        if numero <= 0:
+            raise ValueError("El monto recibido debe ser mayor a 0")
+        self._monto_recibido = round(numero, 2)
 
     @property
     def cambio(self):
         return self._cambio
 
     def calcular_cambio(self):
-        # monto_recibido - monto_base
-        pass
+        return round(self._monto_recibido - self._monto_base, 2)
 
     def calcular_monto(self):
         # el efectivo no tiene recargo
-        pass
+        return round(self._monto_base, 2)
 
     def procesar_pago(self, total):
-        # exige monto_recibido >= total y calcula el cambio
-        pass
+        if total <= 0:
+            raise ValueError("El total a pagar debe ser mayor a 0")
+        if self._monto_recibido < total:
+            raise ValueError("El monto recibido no alcanza para cubrir el total")
+        self._monto_base = round(total, 2)
+        self._fecha_hora = datetime.now()
+        self._cambio = self.calcular_cambio()
+        fecha = self._fecha_hora.strftime("%d/%m/%Y %H:%M")
+        return (
+            f"Pago en efectivo\n"
+            f"Fecha: {fecha}\n"
+            f"Total: Bs {self.calcular_monto():.2f}\n"
+            f"Recibido: Bs {self._monto_recibido:.2f}\n"
+            f"Cambio: Bs {self._cambio:.2f}"
+        )
 
     def acepta_delivery(self):
-        pass
+        # el efectivo se acepta en delivery
+        return True
 
 
 class PagoQr(Pago):
@@ -83,21 +101,38 @@ class PagoQr(Pago):
 
     @cod_trans.setter
     def cod_trans(self, valor):
-        # Bloque 1: validar exactamente LARGO_CODIGO digitos
-        self._cod_trans = valor
+        texto = str(valor).strip()
+        if len(texto) != self.LARGO_CODIGO or not texto.isdigit():
+            raise ValueError(
+                f"El codigo de transaccion debe tener exactamente {self.LARGO_CODIGO} digitos"
+            )
+        self._cod_trans = texto
 
     def calcular_monto(self):
-        pass
+        # el pago por QR no tiene recargo
+        return round(self._monto_base, 2)
 
     def procesar_pago(self, total):
-        pass
+        if total <= 0:
+            raise ValueError("El total a pagar debe ser mayor a 0")
+        self._monto_base = round(total, 2)
+        self._fecha_hora = datetime.now()
+        fecha = self._fecha_hora.strftime("%d/%m/%Y %H:%M")
+        return (
+            f"Pago por QR\n"
+            f"Fecha: {fecha}\n"
+            f"Codigo de transaccion: {self._cod_trans}\n"
+            f"Total: Bs {self.calcular_monto():.2f}"
+        )
 
     def acepta_delivery(self):
-        pass
+        # el QR se acepta en delivery
+        return True
 
 
 class PagoTarjeta(Pago):
-    _recargo = 0.03  # comision del 3 % a cargo del cliente
+    # comision a cargo del cliente (valor de la variante, atributo de clase protegido)
+    _recargo = 0.03
 
     def __init__(self):
         super().__init__("Tarjeta")
@@ -107,16 +142,27 @@ class PagoTarjeta(Pago):
         return self._recargo
 
     def calcular_comision(self):
-        # monto_base * recargo
-        pass
+        # monto_base * recargo (la paga el cliente)
+        return round(self._monto_base * self._recargo, 2)
 
     def calcular_monto(self):
-        # monto_base + calcular_comision()
-        pass
+        # monto_base + comision
+        return round(self._monto_base + self.calcular_comision(), 2)
 
     def procesar_pago(self, total):
-        pass
+        if total <= 0:
+            raise ValueError("El total a pagar debe ser mayor a 0")
+        self._monto_base = round(total, 2)
+        self._fecha_hora = datetime.now()
+        fecha = self._fecha_hora.strftime("%d/%m/%Y %H:%M")
+        return (
+            f"Pago con tarjeta\n"
+            f"Fecha: {fecha}\n"
+            f"Subtotal: Bs {self._monto_base:.2f}\n"
+            f"Comision: Bs {self.calcular_comision():.2f}\n"
+            f"Total: Bs {self.calcular_monto():.2f}"
+        )
 
     def acepta_delivery(self):
         # la tarjeta NO se acepta en delivery
-        pass
+        return False
