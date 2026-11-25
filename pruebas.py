@@ -174,5 +174,19 @@ except ValueError:
 restaurante.menu.clear()
 assert len(restaurante.menu) == 5
 
+# registrar y buscar clientes por celular
+r_ana = restaurante.registrar_cliente("Ana", "71234567", "ana@correo.com", "clave", "Calle Sucre 10")
+assert restaurante.buscar_cliente("71234567") is r_ana
+try:
+    restaurante.registrar_cliente("Otra", "71234567", "otra@correo.com", "x", "Calle 2")
+    assert False, "celular repetido deberia fallar"
+except ValueError:
+    pass
+try:
+    restaurante.buscar_cliente("69999999")
+    assert False, "cliente inexistente deberia fallar"
+except ValueError:
+    pass
+
 
 print("Todas las pruebas pasaron")

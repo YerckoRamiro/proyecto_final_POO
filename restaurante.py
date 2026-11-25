@@ -41,10 +41,20 @@ class Restaurante:
         return disponibles
 
     def registrar_cliente(self, nombre, celular, correo, password, direccion):
-        pass
+        # el celular identifica al cliente en buscar_cliente, no puede repetirse
+        for cliente in self._clientes:
+            if cliente.celular == celular:
+                raise ValueError(f"Ya existe un cliente con el celular {celular}")
+        # Cliente valida sus propios datos en sus setters
+        cliente = Cliente(nombre, celular, correo, password, direccion)
+        self._clientes.append(cliente)
+        return cliente
 
     def buscar_cliente(self, celular):
-        pass
+        for cliente in self._clientes:
+            if cliente.celular == celular:
+                return cliente
+        raise ValueError(f"No existe un cliente con el celular {celular}")
 
     def crear_pedido_local(self, mesa):
         # recorre los pedidos con ocupa_mesa(mesa), sin isinstance
