@@ -257,6 +257,9 @@ class PedidoLlevar(Pedido):
     _costo_envase = 2  # Bs por plato
 
     def __init__(self, cliente, dia=None):
+        # SUPUESTO: para llevar y delivery necesitan un cliente (nombre y celular)
+        if cliente is None:
+            raise ValueError("El pedido para llevar necesita un cliente")
         super().__init__(cliente, dia)
 
     @property
@@ -277,13 +280,16 @@ class PedidoLlevar(Pedido):
         # no requiere validaciones adicionales
         pass
 
-    
+
 class PedidoDelivery(Pedido):
     ZONAS = {"Cercado": 8, "Quillacollo": 15, "Sacaba": 15, "Vinto": 20}
     # SUPUESTO: el minimo se mide sobre el subtotal, sin el envio
     _pedido_minimo = 60
 
     def __init__(self, cliente, zona, direccion_ent, dia=None):
+        # SUPUESTO: para llevar y delivery necesitan un cliente (nombre y celular)
+        if cliente is None:
+            raise ValueError("El pedido delivery necesita un cliente")
         super().__init__(cliente, dia)
         self.zona = zona
         self.direccion_ent = direccion_ent
