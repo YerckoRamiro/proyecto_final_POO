@@ -13,6 +13,8 @@
 | 5 | 24/11/2026 | Gemini | Generación de código | "Sigamos con PedidoDelivery en modelo/pedidos.py." | Validación de zona y dirección, costo fijo por zona sin envío gratis, pedido mínimo de Bs 60 en validar_para_preparar() y puede_pagar_con() polimórfico. | [Completa si cambiaste algo o "Ninguna"] | modelo/pedidos.py, PedidoDelivery | [Sí / Parcial / No] |
 | 6 | 25/11/2026 | Gemini | Revisión y corrección | "Necesito corregir un hueco de encapsulación... [pegado código de modelo/pedidos.py]" | Eliminación del setter de cantidad en PedidoProducto, reemplazo de ítem al sumar, validación de dia y estado al pagar, f-strings con constantes y líneas en blanco entre clases. | [Completa si ajustaste algo o "Ninguna"] | modelo/pedidos.py | [Sí / Parcial / No] |
 
+| 12 | 25/11/2026 | Gemini | Error | "[pegado salida de terminal con AssertionError: para llevar sin cliente deberia fallar]" | Diagnóstico de que modelo/pedidos.py no se había guardado antes del commit 6815b96 (1 insertion, 1 deletion). | Guardé correctamente la validación if cliente is None en PedidoLlevar y PedidoDelivery y verifiqué pruebas.py. | modelo/pedidos.py | Sí |
+
 ## Declaración
 
 Declaro que este registro refleja de forma honesta todos los usos de herramientas de inteligencia artificial que hice en el proyecto, y que puedo explicar sin ayuda el código que entrego, salvo donde lo indico en la última columna.
