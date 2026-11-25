@@ -144,16 +144,16 @@ class ComboProducto:
 
     @cantidad.setter
     def cantidad(self, valor):
-        # Bloque 1: validar cantidad >= 1
+        if valor < 1:
+            raise ValueError("La cantidad en el combo debe ser al menos 1")
         self._cantidad = valor
 
     def calcular_precio(self):
-        # producto.calcular_precio() * cantidad
-        pass
+        # no importa si el producto es plato, bebida u otro combo: cada uno sabe su precio
+        return round(self._producto.calcular_precio() * self._cantidad, 2)
 
     def contar_platos(self):
-        # producto.contar_platos() * cantidad
-        pass
+        return self._producto.contar_platos() * self._cantidad
 
 
 class Combo(Producto):
