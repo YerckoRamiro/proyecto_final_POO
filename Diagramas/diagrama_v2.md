@@ -12,16 +12,21 @@ GitHub dibuja el diagrama automáticamente. Para exportarlo a PNG: copiar el blo
 | `-` | privado | `self.__nombre` (name mangling); solo la propia clase lo usa |
 | subrayado (`$`) | atributo de clase (static) | definido en la clase, compartido por todos los objetos |
 | cursiva (`*`) / `<<abstract>>` | abstracto | `ABC` y `@abstractmethod` |
+| `nombre: tipo` / `metodo() tipo` | tipo del atributo / tipo que devuelve el método | solo en el diagrama (el código no usa anotaciones de tipo) |
+| `*--` rombo lleno | composición: la parte no existe sin el todo | `Combo` crea sus `ComboProducto`; `Pedido` crea sus `PedidoProducto` |
+| `o--` rombo vacío | agregación: el gestor agrupa objetos que existen por sí solos | `Restaurante` guarda productos, clientes y pedidos |
+| `-->` flecha | asociación: guarda una referencia a otro objeto | `Pedido` → `Cliente`, `Pedido` → `Pago` |
 
 ## Cambios respecto al diagrama v1 (aprobado)
 
 1. Visibilidad unificada: atributos protegidos `#` con property (regla de encapsulación); `correo` y `password` de `Cliente` privados `-`.
-2. `Combo.max_producto` → `min_producto`: en la variante D es el **mínimo** de productos (3) para el 15 % de descuento.
-3. Se quita la herencia `Cliente → Pago` (un cliente no es un pago). `Pedido` se asocia con `Cliente` y con `Pago`.
-4. Se quitan las líneas `ComboProducto — Pedido` y `PagoQr — Cliente` (el pedido usa `PedidoProducto`; el pago se asocia al pedido).
-5. `PedidoProducto` agrega `cantidad` (1 a 20).
-6. Se agregan los atributos y métodos que necesita la lógica (estados, `calcular_total`, `acepta_delivery`, etc.) y la clase `Restaurante` (gestor).
-7. `Bebida` agrega `categoria`; `PedidoDelivery` agrega `zona` y `ZONAS`; `Cliente` agrega `verificar_password()`.
+2. Se agregan los tipos de todos los atributos y lo que devuelve cada método.
+3. `Combo.max_producto` → `min_producto`: en la variante D es el **mínimo** de productos (3) para el 15 % de descuento.
+4. Se quita la herencia `Cliente → Pago` (un cliente no es un pago). `Pedido` se asocia con `Cliente` y con `Pago`.
+5. Se quitan las líneas `ComboProducto — Pedido` y `PagoQr — Cliente` (el pedido usa `PedidoProducto`; el pago se asocia al pedido).
+6. `PedidoProducto` agrega `cantidad` (1 a 20). `Combo` agrega `contar_productos()` (suma unidades para el descuento).
+7. Se agregan los atributos y métodos que necesita la lógica (estados, `calcular_total`, `acepta_delivery`, etc.) y la clase `Restaurante` (gestor).
+8. `Bebida` agrega `categoria`; `PedidoDelivery` agrega `zona` y `ZONAS`; `Cliente` agrega `verificar_password()`.
 
 ## Diagrama
 
@@ -29,194 +34,194 @@ GitHub dibuja el diagrama automáticamente. Para exportarlo a PNG: copiar el blo
 classDiagram
     direction TB
 
-    note "+ publico | # protegido (_x en Python, con @property) | - privado (__x en Python)\nsubrayado = atributo de clase (static) | cursiva = abstracto"
+    note "+ publico | # protegido (_x) | - privado (__x) | subrayado = de clase | cursiva = abstracto\nCAMBIOS v1 -> v2: 1) visibilidad y tipos  2) max_producto -> min_producto (variante D: minimo 3)\n3) se quita la herencia Cliente -> Pago  4) se quitan ComboProducto-Pedido y PagoQr-Cliente\n5) PedidoProducto + cantidad, Combo + contar_productos()  6) se agrega Restaurante y los metodos de la logica\n7) Bebida + categoria, PedidoDelivery + zona y ZONAS, Cliente + verificar_password()"
 
     class Producto {
         <<abstract>>
-        #nombre
-        #precio
-        +calcular_precio()*
-        +esta_disponible(dia)*
-        +contar_platos()*
-        +contiene_a(producto)
+        #nombre: str
+        #precio: float
+        +calcular_precio() float*
+        +esta_disponible(dia: str) bool*
+        +contar_platos() int*
+        +contiene_a(producto: Producto) bool
     }
 
     class Plato {
-        #dias_disponibles
-        +calcular_precio()
-        +esta_disponible(dia)
-        +contar_platos()
+        #dias_disponibles: list~str~
+        +calcular_precio() float
+        +esta_disponible(dia: str) bool
+        +contar_platos() int
     }
 
     class Bebida {
-        +VASOS_POR_JARRA$
-        #tipo
-        #categoria
-        +precio_vaso
-        +calcular_vaso()
-        +calcular_precio()
-        +esta_disponible(dia)
-        +contar_platos()
+        +VASOS_POR_JARRA: int$
+        #tipo: str
+        #categoria: str
+        +precio_vaso: float
+        +calcular_vaso() int
+        +calcular_precio() float
+        +esta_disponible(dia: str) bool
+        +contar_platos() int
     }
 
     class Combo {
-        +MIN_PRODUCTOS$
-        #min_producto$
-        #descuento$
-        #productos
-        +agregar_producto(producto, cantidad)
-        +quitar_producto(producto)
-        +contar_productos()
-        +calcular_precio()
-        +esta_disponible(dia)
-        +contar_platos()
-        +contiene_a(producto)
+        +MIN_PRODUCTOS: int$
+        #min_producto: int$
+        #descuento: float$
+        #productos: list~ComboProducto~
+        +agregar_producto(producto: Producto, cantidad: int) None
+        +quitar_producto(producto: Producto) None
+        +contar_productos() int
+        +calcular_precio() float
+        +esta_disponible(dia: str) bool
+        +contar_platos() int
+        +contiene_a(producto: Producto) bool
     }
 
     class ComboProducto {
-        #producto
-        #cantidad
-        +calcular_precio()
-        +contar_platos()
+        #producto: Producto
+        #cantidad: int
+        +calcular_precio() float
+        +contar_platos() int
     }
 
     class Pedido {
         <<abstract>>
-        +REGISTRADO$
-        +EN_PREPARACION$
-        +LISTO$
-        +ENTREGADO$
-        +CANCELADO$
-        +TRANSICIONES$
-        #contador$
-        #numero
-        #cliente
-        #estado
-        #items
-        #fecha_hora
-        #dia
-        #pago
-        +agregar_producto(producto, cantidad)
-        +quitar_producto(producto)
-        +calcular_subtotal()
-        +contar_platos()
-        +calcular_total()
-        +cambiar_estado(nuevo)
-        +cancelar()
-        +esta_abierto()
-        +ocupa_mesa(mesa)
-        +puede_pagar_con(pago)
-        +marcar_pagado(pago)
-        +esta_pagado()
-        +calcular_cargos()*
-        +calcular_descuento()*
-        +obtener_tipo()*
-        +validar_para_preparar()*
+        +REGISTRADO: str$
+        +EN_PREPARACION: str$
+        +LISTO: str$
+        +ENTREGADO: str$
+        +CANCELADO: str$
+        +TRANSICIONES: dict$
+        #contador: int$
+        #numero: int
+        #cliente: Cliente
+        #estado: str
+        #items: list~PedidoProducto~
+        #fecha_hora: datetime
+        #dia: str
+        #pago: Pago
+        +agregar_producto(producto: Producto, cantidad: int) None
+        +quitar_producto(producto: Producto) None
+        +calcular_subtotal() float
+        +contar_platos() int
+        +calcular_total() float
+        +cambiar_estado(nuevo: str) None
+        +cancelar() None
+        +esta_abierto() bool
+        +ocupa_mesa(mesa: int) bool
+        +puede_pagar_con(pago: Pago) bool
+        +marcar_pagado(pago: Pago) None
+        +esta_pagado() bool
+        +calcular_cargos() float*
+        +calcular_descuento() float*
+        +obtener_tipo() str*
+        +validar_para_preparar() None*
     }
 
     class PedidoProducto {
-        +CANTIDAD_MIN$
-        +CANTIDAD_MAX$
-        #pedido
-        #producto
-        #cantidad
-        +calcular_precio()
-        +contar_platos()
+        +CANTIDAD_MIN: int$
+        +CANTIDAD_MAX: int$
+        #pedido: Pedido
+        #producto: Producto
+        #cantidad: int
+        +calcular_precio() float
+        +contar_platos() int
     }
 
     class PedidoLocal {
-        #mesa_min$
-        #mesa_max$
-        #platos_des$
-        #desc_grupo$
-        #mesa
-        +calcular_cargos()
-        +calcular_descuento()
-        +obtener_tipo()
-        +validar_para_preparar()
-        +ocupa_mesa(mesa)
+        #mesa_min: int$
+        #mesa_max: int$
+        #platos_des: int$
+        #desc_grupo: float$
+        #mesa: int
+        +calcular_cargos() float
+        +calcular_descuento() float
+        +obtener_tipo() str
+        +validar_para_preparar() None
+        +ocupa_mesa(mesa: int) bool
     }
 
     class PedidoLlevar {
-        #costo_envase$
-        +calcular_cargos()
-        +calcular_descuento()
-        +obtener_tipo()
-        +validar_para_preparar()
+        #costo_envase: float$
+        +calcular_cargos() float
+        +calcular_descuento() float
+        +obtener_tipo() str
+        +validar_para_preparar() None
     }
 
     class PedidoDelivery {
-        +ZONAS$
-        #pedido_minimo$
-        #zona
-        #direccion_ent
-        +calcular_cargos()
-        +calcular_descuento()
-        +obtener_tipo()
-        +validar_para_preparar()
-        +puede_pagar_con(pago)
+        +ZONAS: dict$
+        #pedido_minimo: float$
+        #zona: str
+        #direccion_ent: str
+        +calcular_cargos() float
+        +calcular_descuento() float
+        +obtener_tipo() str
+        +validar_para_preparar() None
+        +puede_pagar_con(pago: Pago) bool
     }
 
     class Pago {
         <<abstract>>
-        #nombre
-        #monto_base
-        #fecha_hora
-        +calcular_monto()*
-        +procesar_pago(total)*
-        +acepta_delivery()*
+        #nombre: str
+        #monto_base: float
+        #fecha_hora: datetime
+        +calcular_monto() float*
+        +procesar_pago(total: float) str*
+        +acepta_delivery() bool*
     }
 
     class PagoEfectivo {
-        #monto_recibido
-        #cambio
-        +calcular_cambio()
-        +calcular_monto()
-        +procesar_pago(total)
-        +acepta_delivery()
+        #monto_recibido: float
+        #cambio: float
+        +calcular_cambio() float
+        +calcular_monto() float
+        +procesar_pago(total: float) str
+        +acepta_delivery() bool
     }
 
     class PagoQr {
-        +LARGO_CODIGO$
-        #cod_trans
-        +calcular_monto()
-        +procesar_pago(total)
-        +acepta_delivery()
+        +LARGO_CODIGO: int$
+        #cod_trans: str
+        +calcular_monto() float
+        +procesar_pago(total: float) str
+        +acepta_delivery() bool
     }
 
     class PagoTarjeta {
-        #recargo$
-        +calcular_comision()
-        +calcular_monto()
-        +procesar_pago(total)
-        +acepta_delivery()
+        #recargo: float$
+        +calcular_comision() float
+        +calcular_monto() float
+        +procesar_pago(total: float) str
+        +acepta_delivery() bool
     }
 
     class Cliente {
-        #nombre
-        #celular
-        -correo
-        -password
-        #direccion
-        +verificar_password(texto)
+        #nombre: str
+        #celular: str
+        -correo: str
+        -password: str
+        #direccion: str
+        +verificar_password(texto: str) bool
     }
 
     class Restaurante {
-        #menu
-        #clientes
-        #pedidos
-        +registrar_producto(producto)
-        +armar_combo(nombre, productos)
-        +listar_menu(dia)
-        +registrar_cliente(nombre, celular, correo, password, direccion)
-        +buscar_cliente(celular)
-        +crear_pedido_local(mesa)
-        +crear_pedido_para_llevar(cliente)
-        +crear_pedido_delivery(cliente, zona, direccion_ent)
-        +buscar_pedido(numero)
-        +cobrar_pedido(numero, pago)
-        +reporte_ventas_dia()
-        +top_productos(cantidad)
+        #menu: list~Producto~
+        #clientes: list~Cliente~
+        #pedidos: list~Pedido~
+        +registrar_producto(producto: Producto) None
+        +armar_combo(nombre: str, productos: list) Combo
+        +listar_menu(dia: str) list
+        +registrar_cliente(nombre: str, celular: str, correo: str, password: str, direccion: str) Cliente
+        +buscar_cliente(celular: str) Cliente
+        +crear_pedido_local(mesa: int) PedidoLocal
+        +crear_pedido_para_llevar(cliente: Cliente) PedidoLlevar
+        +crear_pedido_delivery(cliente: Cliente, zona: str, direccion_ent: str) PedidoDelivery
+        +buscar_pedido(numero: int) Pedido
+        +cobrar_pedido(numero: int, pago: Pago) str
+        +reporte_ventas_dia() dict
+        +top_productos(cantidad: int) list
     }
 
     Producto <|-- Plato
