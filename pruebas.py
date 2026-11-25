@@ -188,5 +188,39 @@ try:
 except ValueError:
     pass
 
+# crear pedidos de los tres tipos y buscarlos por numero
+r_local = restaurante.crear_pedido_local(5)
+r_llevar = restaurante.crear_pedido_para_llevar(r_ana)
+r_delivery = restaurante.crear_pedido_delivery(r_ana, "Quillacollo", "Av. Blanco Galindo km 5")
+assert restaurante.buscar_pedido(r_llevar.numero) is r_llevar
+assert len(restaurante.pedidos) == 3
+try:
+    restaurante.buscar_pedido(9999)
+    assert False, "pedido inexistente deberia fallar"
+except ValueError:
+    pass
+
+# una mesa no puede tener dos pedidos abiertos (ocupa_mesa, sin isinstance)
+try:
+    restaurante.crear_pedido_local(5)
+    assert False, "mesa ocupada deberia fallar"
+except ValueError:
+    pass
+# mesa fuera de rango y zona invalida
+try:
+    restaurante.crear_pedido_local(16)
+    assert False, "mesa 16 deberia fallar"
+except ValueError:
+    pass
+try:
+    restaurante.crear_pedido_delivery(r_ana, "Tiquipaya", "Calle 1")
+    assert False, "zona invalida deberia fallar"
+except ValueError:
+    pass
+# al cancelar, la mesa se libera
+r_local.cancelar()
+r_local_2 = restaurante.crear_pedido_local(5)
+assert r_local_2.mesa == 5
+
 
 print("Todas las pruebas pasaron")

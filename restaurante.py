@@ -57,17 +57,30 @@ class Restaurante:
         raise ValueError(f"No existe un cliente con el celular {celular}")
 
     def crear_pedido_local(self, mesa):
-        # recorre los pedidos con ocupa_mesa(mesa), sin isinstance
-        pass
+        # cada pedido responde si ocupa la mesa: para llevar y delivery dicen False (sin isinstance)
+        for pedido in self._pedidos:
+            if pedido.ocupa_mesa(mesa):
+                raise ValueError(f"La mesa {mesa} ya tiene un pedido abierto")
+        pedido = PedidoLocal(mesa)
+        self._pedidos.append(pedido)
+        return pedido
 
     def crear_pedido_para_llevar(self, cliente):
-        pass
+        pedido = PedidoLlevar(cliente)
+        self._pedidos.append(pedido)
+        return pedido
 
     def crear_pedido_delivery(self, cliente, zona, direccion_ent):
-        pass
+        # PedidoDelivery valida la zona y la direccion
+        pedido = PedidoDelivery(cliente, zona, direccion_ent)
+        self._pedidos.append(pedido)
+        return pedido
 
     def buscar_pedido(self, numero):
-        pass
+        for pedido in self._pedidos:
+            if pedido.numero == numero:
+                return pedido
+        raise ValueError(f"No existe el pedido numero {numero}")
 
     def cobrar_pedido(self, numero, pago):
         # LISTO o ENTREGADO, no pagado y puede_pagar_con(pago)
