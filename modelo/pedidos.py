@@ -277,7 +277,7 @@ class PedidoLlevar(Pedido):
         # no requiere validaciones adicionales
         pass
 
-
+    
 class PedidoDelivery(Pedido):
     ZONAS = {"Cercado": 8, "Quillacollo": 15, "Sacaba": 15, "Vinto": 20}
     # SUPUESTO: el minimo se mide sobre el subtotal, sin el envio
