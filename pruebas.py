@@ -140,6 +140,18 @@ try:
 except TypeError:
     pass
 
+# QR de 11 digitos lanza ValueError
+try:
+    PagoQr("12345678901")
+    assert False
+except ValueError:
+    pass
+
+# Comision con decimales (88.80)
+pago_tarjeta_dec = PagoTarjeta()
+pago_tarjeta_dec.procesar_pago(88.80)
+assert pago_tarjeta_dec.calcular_comision() == 2.66
+assert pago_tarjeta_dec.calcular_monto() == 91.46
 
 # ===== PRUEBAS DE RESTAURANTE ===== (integracion)
 from restaurante import Restaurante
