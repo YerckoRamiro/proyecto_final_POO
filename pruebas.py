@@ -1,7 +1,7 @@
-from modelo.productos import Producto, Plato, Bebida, Combo
-from modelo.pedidos import Pedido, PedidoLocal, PedidoLlevar, PedidoDelivery
-from modelo.pagos import Pago, PagoEfectivo, PagoQr, PagoTarjeta
-from modelo.clientes import Cliente
+from producto import Producto, Plato, Bebida, Combo
+from pedido import Pedido, PedidoLocal, PedidoLlevar, PedidoDelivery
+from pagos import Pago, PagoEfectivo, PagoQr, PagoTarjeta
+from Cliente import Cliente
 
 
 # ===== PRUEBAS DE PRODUCTOS ===== (Yercko)
