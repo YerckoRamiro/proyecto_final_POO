@@ -1,5 +1,5 @@
 from modelo.productos import Combo, DIAS_SEMANA
-from modelo.pedidos import PedidoLocal, PedidoLlevar, PedidoDelivery
+from modelo.pedidos import Pedido, PedidoLocal, PedidoLlevar, PedidoDelivery
 from modelo.clientes import Cliente
 
 
@@ -83,8 +83,19 @@ class Restaurante:
         raise ValueError(f"No existe el pedido numero {numero}")
 
     def cobrar_pedido(self, numero, pago):
-        # LISTO o ENTREGADO, no pagado y puede_pagar_con(pago)
-        pass
+        pedido = self.buscar_pedido(numero)
+        # confirmado: se cobra en LISTO o ENTREGADO (asi un CANCELADO nunca se cobra)
+        if pedido.estado != Pedido.LISTO and pedido.estado != Pedido.ENTREGADO:
+            raise ValueError(f"Solo se cobra un pedido LISTO o ENTREGADO (esta {pedido.estado})")
+        if pedido.esta_pagado():
+            raise ValueError(f"El pedido {numero} ya fue pagado")
+        # cada pedido decide que pagos acepta (delivery: solo efectivo o QR)
+        if not pedido.puede_pagar_con(pago):
+            raise ValueError(f"El pedido {pedido.obtener_tipo()} no acepta pago con {pago.nombre}")
+        # primero se procesa: si el pago falla, el pedido no queda pagado
+        comprobante = pago.procesar_pago(pedido.calcular_total())
+        pedido.marcar_pagado(pago)
+        return f"Pedido N. {numero} ({pedido.obtener_tipo()})\n{comprobante}"
 
     def reporte_ventas_dia(self):
         # agrupa por obtener_tipo(); solo pedidos pagados

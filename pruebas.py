@@ -223,4 +223,72 @@ r_local_2 = restaurante.crear_pedido_local(5)
 assert r_local_2.mesa == 5
 
 
+# pago de mentira SOLO para probar Restaurante mientras pagos.py es el esqueleto
+# (cuando se una el codigo de Anahi se cambia por PagoEfectivo, PagoQr y PagoTarjeta)
+class PagoPrueba(Pago):
+    def __init__(self, acepta):
+        super().__init__("Prueba")
+        self._acepta = acepta
+
+    def calcular_monto(self):
+        return self._monto_base
+
+    def procesar_pago(self, total):
+        self._monto_base = total
+        return f"Total: Bs {total:.2f}"
+
+    def acepta_delivery(self):
+        return self._acepta
+
+
+# delivery a Quillacollo con 2 combos clasicos: 82 + 15 = Bs 97
+r_delivery.agregar_producto(r_combo, 2)
+assert r_delivery.calcular_total() == 97.00
+
+# no se cobra en REGISTRADO
+try:
+    restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(True))
+    assert False, "no se cobra un pedido REGISTRADO"
+except ValueError:
+    pass
+
+r_delivery.cambiar_estado(Pedido.EN_PREPARACION)
+r_delivery.cambiar_estado(Pedido.LISTO)
+
+# un pago que no acepta delivery se rechaza y el pedido sigue sin pagar
+try:
+    restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(False))
+    assert False, "el delivery deberia rechazar este pago"
+except ValueError:
+    pass
+assert not r_delivery.esta_pagado()
+
+# cobro correcto en LISTO: devuelve el comprobante y marca el pedido como pagado
+r_comprobante = restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(True))
+assert "97.00" in r_comprobante
+assert r_delivery.esta_pagado()
+
+# no se cobra dos veces
+try:
+    restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(True))
+    assert False, "no se cobra dos veces"
+except ValueError:
+    pass
+
+# no se cobra un pedido cancelado
+try:
+    restaurante.cobrar_pedido(r_local.numero, PagoPrueba(True))
+    assert False, "no se cobra un pedido cancelado"
+except ValueError:
+    pass
+
+# tambien se cobra en ENTREGADO
+r_llevar.agregar_producto(r_silpancho, 1)
+r_llevar.cambiar_estado(Pedido.EN_PREPARACION)
+r_llevar.cambiar_estado(Pedido.LISTO)
+r_llevar.cambiar_estado(Pedido.ENTREGADO)
+restaurante.cobrar_pedido(r_llevar.numero, PagoPrueba(False))
+assert r_llevar.esta_pagado()
+
+
 print("Todas las pruebas pasaron")
