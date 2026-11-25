@@ -80,6 +80,7 @@
 | 75 | 25/11/2026 | Claude Code | Generación de código | "ya hicieron el PR la maria y anahi. ya es hora quiero que lo termines lo que falta. sieguiendo la guia. la terminal que este listo para defender todo. la bitacora limpia [...]" | Unir main (PR #3 y #4) a feature/integracion y `main.py` con el menú de consola de 10 opciones, datos de ejemplo y try/except ValueError; probado con un recorrido completo | (completar) | `main.py` | (completar) |
 | 76 | 25/11/2026 | Claude Code | Concepto | "borra eso de top 3. crea que no menciona la consogna o si ?" | Confirmación de que la consigna sí pide los 3 productos más vendidos (sección 5, punto 7), así que no se borra | Decidí no borrarlo | `restaurante.py`, `main.py` (sin cambios) | (completar) |
 | 77 | 25/11/2026 | Claude Code | Concepto | "ok, déjalo así entonces" | Se mantiene el top 3 sin cambios | Ninguno | Sin cambios de código | (completar) |
+| 78 | 25/11/2026 | Claude Code | Concepto | "ahora dame todas las preguntas y la guia con conceptos de polimorfismo herencia y encapsulacion y abstraccion para que mi equipo estudie" | `docs/guia_estudio.md`: conceptos de los 4 pilares con ejemplos de nuestro código, relaciones UML, preguntas con respuesta por pilar y por módulo, trazas, cambios en vivo, puntos débiles y plan de estudio | (completar) | `docs/guia_estudio.md` | (completar) |
 
 **Declaración.** Declaro que este registro incluye todos mis usos de IA en el proyecto y que puedo explicar el código que entrego.
  
