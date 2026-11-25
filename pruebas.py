@@ -130,6 +130,144 @@ try:
 except TypeError:
     pass
 
+# Datos de prueba propios con prefijo p_
+p_silpancho = Plato("Silpancho", 35)
+p_moco = Bebida("Mocochinchi", 6, "vaso", "refresco natural")
+p_combo = Combo("Combo clasico", [p_silpancho, p_moco])
+p_cliente = Cliente("Ana", "71234567", "ana@correo.com", "clave", "Calle 1")
+
+# 1. Local con 6 silpanchos: subtotal 210, descuento 10.5, total 199.50
+p_local_6 = PedidoLocal(1, dia="martes")
+p_local_6.agregar_producto(p_silpancho, 6)
+assert p_local_6.calcular_subtotal() == 210.00
+assert p_local_6.calcular_descuento() == 10.50
+assert p_local_6.calcular_total() == 199.50
+
+# 2. Local con 5 silpanchos: descuento 0 (no llega a 6 platos)
+p_local_5 = PedidoLocal(2, dia="martes")
+p_local_5.agregar_producto(p_silpancho, 5)
+assert p_local_5.calcular_descuento() == 0
+
+# 3. Para llevar con 3 combos + 2 mocochinchi: cargos 6 (platos del combo cuentan, bebidas no)
+p_llevar = PedidoLlevar(p_cliente, dia="martes")
+p_llevar.agregar_producto(p_combo, 3)
+p_llevar.agregar_producto(p_moco, 2)
+assert p_llevar.calcular_cargos() == 6.00
+
+# 4. Delivery a Quillacollo con 2 combos: subtotal 82, cargos 15, total 97 (sin envio gratis)
+p_delivery = PedidoDelivery(p_cliente, "Quillacollo", "Av. Blanco Galindo", dia="martes")
+p_delivery.agregar_producto(p_combo, 2)
+assert p_delivery.calcular_subtotal() == 82.00
+assert p_delivery.calcular_cargos() == 15.00
+assert p_delivery.calcular_total() == 97.00
+
+# 5. Delivery a Cercado con 1 silpancho (35) -> cambiar_estado(EN_PREPARACION) falla (minimo Bs 60)
+p_del_min = PedidoDelivery(p_cliente, "Cercado", "Calle Sucre 10", dia="martes")
+p_del_min.agregar_producto(p_silpancho, 1)
+try:
+    p_del_min.cambiar_estado(Pedido.EN_PREPARACION)
+    assert False, "delivery bajo Bs 60 deberia fallar"
+except ValueError:
+    pass
+
+# 6. Pedido nuevo -> cambiar_estado(Pedido.LISTO) falla (transicion invalida)
+p_estado = PedidoLocal(3, dia="martes")
+p_estado.agregar_producto(p_silpancho, 1)
+try:
+    p_estado.cambiar_estado(Pedido.LISTO)
+    assert False, "transicion de REGISTRADO a LISTO deberia fallar"
+except ValueError:
+    pass
+
+# 7. Pedido en EN_PREPARACION -> cancelar() falla
+p_estado.cambiar_estado(Pedido.EN_PREPARACION)
+try:
+    p_estado.cancelar()
+    assert False, "cancelar en EN_PREPARACION deberia fallar"
+except ValueError:
+    pass
+
+# 8. Pedido en EN_PREPARACION -> agregar_producto(...) y quitar_producto(...) fallan
+try:
+    p_estado.agregar_producto(p_moco, 1)
+    assert False, "agregar producto en EN_PREPARACION deberia fallar"
+except ValueError:
+    pass
+try:
+    p_estado.quitar_producto(p_silpancho)
+    assert False, "quitar producto en EN_PREPARACION deberia fallar"
+except ValueError:
+    pass
+
+# 9. PedidoLocal(0) y PedidoLocal(16) fallan
+try:
+    PedidoLocal(0, dia="martes")
+    assert False, "mesa 0 deberia fallar"
+except ValueError:
+    pass
+try:
+    PedidoLocal(16, dia="martes")
+    assert False, "mesa 16 deberia fallar"
+except ValueError:
+    pass
+
+# 10. agregar_producto con cantidad 0 y 21 fallan
+p_val = PedidoLocal(4, dia="martes")
+try:
+    p_val.agregar_producto(p_silpancho, 0)
+    assert False, "cantidad 0 deberia fallar"
+except ValueError:
+    pass
+try:
+    p_val.agregar_producto(p_silpancho, 21)
+    assert False, "cantidad 21 deberia fallar"
+except ValueError:
+    pass
+
+# 11. 20 silpanchos y luego 1 mas falla, y la cantidad sigue en 20
+p_val.agregar_producto(p_silpancho, 20)
+try:
+    p_val.agregar_producto(p_silpancho, 1)
+    assert False, "sumar mas de 20 unidades deberia fallar"
+except ValueError:
+    pass
+assert p_val.items[0].cantidad == 20
+
+# 12. Encapsulacion: pedido.items[0].cantidad = 20 lanza AttributeError
+try:
+    p_val.items[0].cantidad = 20
+    assert False, "modificar cantidad desde fuera deberia lanzar AttributeError"
+except AttributeError:
+    pass
+
+# 13. PedidoLocal(3, dia="Domingo") falla (dia mal escrito)
+try:
+    PedidoLocal(3, dia="Domingo")
+    assert False, "dia mal escrito deberia fallar"
+except ValueError:
+    pass
+
+# 14. PedidoLlevar(None) y PedidoDelivery(None, ...) fallan (exigen cliente)
+try:
+    PedidoLlevar(None, dia="martes")
+    assert False, "para llevar sin cliente deberia fallar"
+except ValueError:
+    pass
+try:
+    PedidoDelivery(None, "Cercado", "Calle 1", dia="martes")
+    assert False, "delivery sin cliente deberia fallar"
+except ValueError:
+    pass
+
+# 15. marcar_pagado(...) en un pedido REGISTRADO falla
+# (Descomentar cuando Anahi una PagoQr a main; pagos.py aun es el esqueleto)
+# p_sin_pagar = PedidoLocal(5, dia="martes")
+# p_sin_pagar.agregar_producto(p_silpancho, 1)
+# try:
+#     p_sin_pagar.marcar_pagado(PagoQr("1234567890"))
+#     assert False, "marcar_pagado en REGISTRADO deberia fallar"
+# except ValueError:
+#     pass
 
 # ===== PRUEBAS DE PAGOS Y CLIENTES ===== (Anahi)
 
