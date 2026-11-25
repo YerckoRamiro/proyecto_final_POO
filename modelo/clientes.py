@@ -3,8 +3,10 @@ class Cliente:
         self.nombre = nombre
         self.celular = celular
         self.correo = correo
-        # privado: solo esta clase lo toca, no tiene property de lectura
-        self.__password = password
+        # la contrasena es privada y no tiene property de lectura
+        if password is None or str(password).strip() == "":
+            raise ValueError("La contrasena no puede estar vacia")
+        self.__password = str(password)
         self.direccion = direccion
 
     @property
@@ -13,8 +15,9 @@ class Cliente:
 
     @nombre.setter
     def nombre(self, valor):
-        # Bloque 1: validar que no este vacio
-        self._nombre = valor
+        if valor is None or str(valor).strip() == "":
+            raise ValueError("El nombre no puede estar vacio")
+        self._nombre = str(valor).strip()
 
     @property
     def celular(self):
@@ -22,8 +25,12 @@ class Cliente:
 
     @celular.setter
     def celular(self, valor):
-        # Bloque 1: validar 8 digitos que empiezan en 6 o 7
-        self._celular = valor
+        texto = str(valor).strip()
+        if len(texto) != 8 or not texto.isdigit():
+            raise ValueError("El celular debe tener exactamente 8 digitos")
+        if texto[0] != "6" and texto[0] != "7":
+            raise ValueError("El celular debe empezar con 6 o 7")
+        self._celular = texto
 
     @property
     def correo(self):
@@ -31,8 +38,9 @@ class Cliente:
 
     @correo.setter
     def correo(self, valor):
-        # Bloque 1: validar que no este vacio
-        self.__correo = valor
+        if valor is None or str(valor).strip() == "":
+            raise ValueError("El correo no puede estar vacio")
+        self.__correo = str(valor).strip()
 
     @property
     def direccion(self):
@@ -40,9 +48,9 @@ class Cliente:
 
     @direccion.setter
     def direccion(self, valor):
-        # Bloque 1: validar que no este vacia
-        self._direccion = valor
+        if valor is None or str(valor).strip() == "":
+            raise ValueError("La direccion no puede estar vacia")
+        self._direccion = str(valor).strip()
 
     def verificar_password(self, texto):
-        # compara sin mostrar nunca el password
-        pass
+        return self.__password == texto
