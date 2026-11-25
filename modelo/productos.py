@@ -15,8 +15,9 @@ class Producto(ABC):
 
     @nombre.setter
     def nombre(self, valor):
-        # Bloque 1: validar que no este vacio
-        self._nombre = valor
+        if valor.strip() == "":
+            raise ValueError("El nombre del producto no puede estar vacio")
+        self._nombre = valor.strip()
 
     @property
     def precio(self):
@@ -24,7 +25,9 @@ class Producto(ABC):
 
     @precio.setter
     def precio(self, valor):
-        # Bloque 1: validar precio > 0 (es el UNICO lugar donde se valida el precio)
+        # es el UNICO lugar donde se valida el precio (sirve para Plato, Bebida y Combo)
+        if valor <= 0:
+            raise ValueError("El precio debe ser mayor a 0")
         self._precio = valor
 
     @abstractmethod
