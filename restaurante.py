@@ -1,4 +1,4 @@
-from modelo.productos import Plato, Bebida, Combo
+from modelo.productos import Combo, DIAS_SEMANA
 from modelo.pedidos import PedidoLocal, PedidoLlevar, PedidoDelivery
 from modelo.clientes import Cliente
 
@@ -22,14 +22,23 @@ class Restaurante:
         return list(self._pedidos)
 
     def registrar_producto(self, producto):
-        pass
+        self._menu.append(producto)
 
     def armar_combo(self, nombre, productos):
-        pass
+        # Combo valida el minimo de productos y que no haya ciclos
+        combo = Combo(nombre, productos)
+        self.registrar_producto(combo)
+        return combo
 
     def listar_menu(self, dia):
-        # solo los productos con esta_disponible(dia)
-        pass
+        if dia not in DIAS_SEMANA:
+            raise ValueError(f"Dia invalido: {dia}")
+        disponibles = []
+        for producto in self._menu:
+            # cada producto sabe si se vende ese dia (plato, bebida o combo)
+            if producto.esta_disponible(dia):
+                disponibles.append(producto)
+        return disponibles
 
     def registrar_cliente(self, nombre, celular, correo, password, direccion):
         pass

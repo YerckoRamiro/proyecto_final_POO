@@ -142,6 +142,37 @@ except TypeError:
 
 
 # ===== PRUEBAS DE RESTAURANTE ===== (integracion)
+from restaurante import Restaurante
+
+restaurante = Restaurante()
+r_silpancho = Plato("Silpancho", 35)
+r_chicharron = Plato("Chicharron", 45, ["domingo"])
+r_moco = Bebida("Mocochinchi", 6, "vaso", "refresco natural")
+restaurante.registrar_producto(r_silpancho)
+restaurante.registrar_producto(r_chicharron)
+restaurante.registrar_producto(r_moco)
+
+# armar_combo crea el combo y lo agrega al menu
+r_combo = restaurante.armar_combo("Combo clasico", [r_silpancho, r_moco])
+assert r_combo.calcular_precio() == 41.00
+assert len(restaurante.menu) == 4
+
+# listar_menu: el chicharron (y un combo con chicharron) solo aparece el domingo
+r_combo_domingo = restaurante.armar_combo("Combo dominguero", [r_chicharron, r_moco])
+assert len(restaurante.listar_menu("domingo")) == 5
+martes = restaurante.listar_menu("martes")
+assert len(martes) == 3
+assert r_chicharron not in martes
+assert r_combo_domingo not in martes
+try:
+    restaurante.listar_menu("Domingo")
+    assert False, "dia mal escrito deberia fallar"
+except ValueError:
+    pass
+
+# el menu no se modifica desde fuera
+restaurante.menu.clear()
+assert len(restaurante.menu) == 5
 
 
 print("Todas las pruebas pasaron")
