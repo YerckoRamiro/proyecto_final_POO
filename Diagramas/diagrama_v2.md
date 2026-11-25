@@ -66,6 +66,7 @@ classDiagram
         #productos
         +agregar_producto(producto, cantidad)
         +quitar_producto(producto)
+        +contar_productos()
         +calcular_precio()
         +esta_disponible(dia)
         +contar_platos()

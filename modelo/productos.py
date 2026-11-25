@@ -150,7 +150,8 @@ class ComboProducto:
 
 class Combo(Producto):
     MIN_PRODUCTOS = 2
-    # SUPUESTO: con 2 productos no hay descuento; "3 o mas" cuenta los productos directos (un combo interno cuenta como 1)
+    # SUPUESTO: con 2 productos no hay descuento; "3 o mas" cuenta las unidades directas del combo
+    # (2 silpanchos + 1 mocochinchi = 3; un combo interno cuenta como 1 por unidad)
     _min_producto = 3  # productos necesarios para el descuento
     _descuento = 0.15
 
@@ -184,8 +185,12 @@ class Combo(Producto):
         # nunca menos de MIN_PRODUCTOS
         pass
 
+    def contar_productos(self):
+        # suma la cantidad de cada ComboProducto (se usa para MIN_PRODUCTOS y min_producto)
+        pass
+
     def calcular_precio(self):
-        # suma de cada ComboProducto * (1 - descuento) si hay min_producto o mas
+        # suma de cada ComboProducto * (1 - descuento) si contar_productos() >= min_producto
         pass
 
     def esta_disponible(self, dia):
