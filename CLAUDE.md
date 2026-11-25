@@ -75,7 +75,8 @@ La interfaz es de consola, simple y clara. No hacemos interfaz gráfica ni nada 
 
 ## Supuestos del equipo (NO consultados al docente; lectura literal de la consigna)
 Cada uno va en una constante o método con el comentario `# SUPUESTO:`, y el README y el acta los declaran.
-1. Combo con 2 productos: sin descuento. El "3 o más" cuenta los productos directos del combo (un combo interno cuenta como 1).
+1. Combo con 2 productos: sin descuento. El "3 o más" (y el mínimo de 2) cuenta las unidades directas del combo sumando la
+   cantidad de cada `ComboProducto` con `contar_productos()`: 2 silpanchos + 1 mocochinchi = 3 → 15 %. Un combo interno cuenta como 1 por unidad.
 2. El chicharrón sigue vendiéndose solo los domingos (regla base; la variante D no la reemplaza).
 3. El 5 % del pedido local se calcula sobre el subtotal y cuenta los platos dentro de combos (usa `contar_platos()`).
 4. El pedido mínimo de Bs 60 del delivery se mide sobre el subtotal, sin el envío.
@@ -96,7 +97,7 @@ Constante de módulo `DIAS_SEMANA`: "lunes", "martes", "miercoles", "jueves", "v
 | `Plato(Producto)` | `_dias_disponibles` (lista de días; por defecto los 7) | `calcular_precio()` = precio; `esta_disponible(dia)` = el día está en `_dias_disponibles`; `contar_platos()` = 1 |
 | `Bebida(Producto)` | `_tipo` ("vaso" o "jarra"), `_categoria` ("refresco natural" o "gaseosa"); constante `VASOS_POR_JARRA` = 3; property `precio_vaso` (devuelve el `precio` del padre, sin atributo propio) | `calcular_vaso()` = 1 si es vaso, 3 si es jarra; `calcular_precio()` = `precio_vaso` × `calcular_vaso()`; siempre disponible; `contar_platos()` = 0 |
 | `ComboProducto` | `_producto`, `_cantidad` (≥ 1) | `calcular_precio()` = `producto.calcular_precio()` × cantidad; `contar_platos()` = `producto.contar_platos()` × cantidad |
-| `Combo(Producto)` | `_productos` (lista de `ComboProducto`, mínimo 2); constante `MIN_PRODUCTOS` = 2; `_min_producto` = 3, `_descuento` = 0.15 | `agregar_producto(producto, cantidad=1)` (rechaza si `producto.contiene_a(self)`), `quitar_producto(producto)` (nunca menos de 2), `productos` (copia). `calcular_precio()` = suma de `calcular_precio()` de cada `ComboProducto` × (1 − descuento) si tiene `min_producto` o más, sin descuento si no. `esta_disponible(dia)` = todos disponibles. `contar_platos()` = suma de sus hijos. `contiene_a(p)` = `self is p` o algún hijo lo contiene (evita ciclos) |
+| `Combo(Producto)` | `_productos` (lista de `ComboProducto`, mínimo 2); constante `MIN_PRODUCTOS` = 2; `_min_producto` = 3, `_descuento` = 0.15 | `agregar_producto(producto, cantidad=1)` (rechaza si `producto.contiene_a(self)`), `quitar_producto(producto)` (nunca menos de 2), `productos` (copia), `contar_productos()` = suma de las cantidades. `calcular_precio()` = suma de `calcular_precio()` de cada `ComboProducto` × (1 − descuento) si `contar_productos()` ≥ `min_producto`, sin descuento si no. `esta_disponible(dia)` = todos disponibles. `contar_platos()` = suma de sus hijos. `contiene_a(p)` = `self is p` o algún hijo lo contiene (evita ciclos) |
 
 ### modelo/pedidos.py
 | Clase | Atributos | Métodos |
