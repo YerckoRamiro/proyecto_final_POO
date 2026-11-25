@@ -26,18 +26,15 @@ class PedidoProducto:
 
     @cantidad.setter
     def cantidad(self, valor):
-        # Bloque 1: validar entre CANTIDAD_MIN y CANTIDAD_MAX
+        if valor < self.CANTIDAD_MIN or valor > self.CANTIDAD_MAX:
+            raise ValueError("La cantidad debe estar entre 1 y 20.")
         self._cantidad = valor
 
     def calcular_precio(self):
-        # producto.calcular_precio() * cantidad
-        pass
+        return round(self._producto.calcular_precio() * self._cantidad, 2)
 
     def contar_platos(self):
-        # producto.contar_platos() * cantidad
-        pass
-
-
+        return self._producto.contar_platos() * self._cantidad
 class Pedido(ABC):
     REGISTRADO = "REGISTRADO"
     EN_PREPARACION = "EN_PREPARACION"
@@ -98,34 +95,57 @@ class Pedido(ABC):
         return self._pago
 
     def agregar_producto(self, producto, cantidad):
-        # solo en REGISTRADO; verifica producto.esta_disponible(self._dia); si ya existe suma cantidades
-        pass
+        if self._estado != Pedido.REGISTRADO:
+            raise ValueError("Solo se pueden agregar productos cuando el pedido esta REGISTRADO.")
+        if not producto.esta_disponible(self._dia):
+            raise ValueError("El producto no esta disponible el dia " + self._dia + ".")
+        for item in self._items:
+            if item.producto is producto:
+                item.cantidad = item.cantidad + cantidad
+                return
+        nuevo_item = PedidoProducto(self, producto, cantidad)
+        self._items.append(nuevo_item)
 
     def quitar_producto(self, producto):
-        # solo en REGISTRADO
-        pass
+        if self._estado != Pedido.REGISTRADO:
+            raise ValueError("Solo se pueden quitar productos cuando el pedido esta REGISTRADO.")
+        for item in self._items:
+            if item.producto is producto:
+                self._items.remove(item)
+                return
+        raise ValueError("El producto no se encuentra en el pedido.")
 
     def calcular_subtotal(self):
-        pass
+        total = 0
+        for item in self._items:
+            total = total + item.calcular_precio()
+        return round(total, 2)
 
     def contar_platos(self):
-        pass
+        total = 0
+        for item in self._items:
+            total = total + item.contar_platos()
+        return total
 
     def calcular_total(self):
-        # subtotal - descuento + cargos
-        pass
+        total = self.calcular_subtotal() - self.calcular_descuento() + self.calcular_cargos()
+        return round(total, 2)
 
     def cambiar_estado(self, nuevo):
-        # revisa TRANSICIONES; al pasar a EN_PREPARACION exige items y validar_para_preparar()
-        pass
+        permitidos = Pedido.TRANSICIONES[self._estado]
+        if nuevo not in permitidos:
+            raise ValueError("No se puede cambiar de " + self._estado + " a " + nuevo + ".")
+        if nuevo == Pedido.EN_PREPARACION:
+            if len(self._items) == 0:
+                raise ValueError("El pedido debe tener al menos un producto para pasar a preparacion.")
+            self.validar_para_preparar()
+        self._estado = nuevo
 
     def cancelar(self):
-        # solo desde REGISTRADO
-        pass
+        self.cambiar_estado(Pedido.CANCELADO)
 
     def esta_abierto(self):
-        # abierto = no ENTREGADO ni CANCELADO
-        pass
+        return self._estado != Pedido.ENTREGADO and self._estado != Pedido.CANCELADO
 
     def ocupa_mesa(self, mesa):
         # por defecto un pedido no ocupa mesa; PedidoLocal lo sobrescribe
@@ -136,11 +156,12 @@ class Pedido(ABC):
         return True
 
     def marcar_pagado(self, pago):
-        # guarda el pago usado
-        pass
+        if self.esta_pagado():
+            raise ValueError("El pedido ya fue pagado.")
+        self._pago = pago
 
     def esta_pagado(self):
-        pass
+        return self._pago is not None
 
     @abstractmethod
     def calcular_cargos(self):
@@ -157,8 +178,6 @@ class Pedido(ABC):
     @abstractmethod
     def validar_para_preparar(self):
         pass
-
-
 class PedidoLocal(Pedido):
     _mesa_min = 1
     _mesa_max = 15
@@ -192,28 +211,30 @@ class PedidoLocal(Pedido):
 
     @mesa.setter
     def mesa(self, valor):
-        # Bloque 1: validar entre mesa_min y mesa_max
+        if valor < self._mesa_min or valor > self._mesa_max:
+            raise ValueError("La mesa debe estar entre 1 y 15.")
         self._mesa = valor
 
     def calcular_cargos(self):
         # en el local no hay cargos
-        pass
+        return 0
 
     def calcular_descuento(self):
         # desc_grupo del subtotal si contar_platos() >= platos_des
-        pass
+        if self.contar_platos() >= self._platos_des:
+            return round(self.calcular_subtotal() * self._desc_grupo, 2)
+        return 0
 
     def obtener_tipo(self):
-        pass
+        return "Local"
 
     def validar_para_preparar(self):
+        # no requiere validaciones adicionales
         pass
 
     def ocupa_mesa(self, mesa):
         # misma mesa y pedido abierto
-        pass
-
-
+        return self._mesa == mesa and self.esta_abierto()
 class PedidoLlevar(Pedido):
     _costo_envase = 2  # Bs por plato
 
@@ -226,18 +247,17 @@ class PedidoLlevar(Pedido):
 
     def calcular_cargos(self):
         # contar_platos() * costo_envase (platos dentro de combos cuentan, bebidas no)
-        pass
+        return round(self.contar_platos() * self._costo_envase, 2)
 
     def calcular_descuento(self):
-        pass
+        return 0
 
     def obtener_tipo(self):
-        pass
+        return "Para llevar"
 
     def validar_para_preparar(self):
+        # no requiere validaciones adicionales
         pass
-
-
 class PedidoDelivery(Pedido):
     ZONAS = {"Cercado": 8, "Quillacollo": 15, "Sacaba": 15, "Vinto": 20}
     # SUPUESTO: el minimo se mide sobre el subtotal, sin el envio
@@ -258,7 +278,8 @@ class PedidoDelivery(Pedido):
 
     @zona.setter
     def zona(self, valor):
-        # Bloque 1: validar que la zona este en ZONAS
+        if valor not in self.ZONAS:
+            raise ValueError("La zona de delivery no es valida.")
         self._zona = valor
 
     @property
@@ -267,23 +288,25 @@ class PedidoDelivery(Pedido):
 
     @direccion_ent.setter
     def direccion_ent(self, valor):
-        # Bloque 1: validar que no este vacia
+        if valor is None or valor.strip() == "":
+            raise ValueError("La direccion de entrega no puede estar vacia.")
         self._direccion_ent = valor
 
     def calcular_cargos(self):
         # costo de la zona (nunca es gratis en la variante D)
-        pass
+        return round(self.ZONAS[self._zona], 2)
 
     def calcular_descuento(self):
-        pass
+        return 0
 
     def obtener_tipo(self):
-        pass
+        return "Delivery"
 
     def validar_para_preparar(self):
         # exige subtotal >= pedido_minimo
-        pass
+        if self.calcular_subtotal() < self._pedido_minimo:
+            raise ValueError("El pedido minimo para delivery es de Bs 60.")
 
     def puede_pagar_con(self, pago):
         # pago.acepta_delivery()
-        pass
+        return pago.acepta_delivery()
