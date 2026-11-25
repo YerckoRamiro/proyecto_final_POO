@@ -97,7 +97,8 @@ class Bebida(Producto):
 
     @tipo.setter
     def tipo(self, valor):
-        # Bloque 1: validar "vaso" o "jarra"
+        if valor != "vaso" and valor != "jarra":
+            raise ValueError("El tipo de bebida debe ser 'vaso' o 'jarra'")
         self._tipo = valor
 
     @property
@@ -106,24 +107,26 @@ class Bebida(Producto):
 
     @categoria.setter
     def categoria(self, valor):
-        # Bloque 1: validar "refresco natural" o "gaseosa"
+        if valor != "refresco natural" and valor != "gaseosa":
+            raise ValueError("La categoria debe ser 'refresco natural' o 'gaseosa'")
         self._categoria = valor
 
     def calcular_vaso(self):
-        # cuantos vasos equivale: vaso = 1, jarra = VASOS_POR_JARRA
-        pass
+        # cuantos vasos equivale: la jarra cuesta como 3 vasos
+        if self._tipo == "jarra":
+            return self.VASOS_POR_JARRA
+        return 1
 
     def calcular_precio(self):
-        # precio_vaso * calcular_vaso()
-        pass
+        return round(self.precio_vaso * self.calcular_vaso(), 2)
 
     def esta_disponible(self, dia):
-        # las bebidas siempre estan disponibles
-        pass
+        # las bebidas se venden todos los dias
+        return True
 
     def contar_platos(self):
-        # una bebida no es plato
-        pass
+        # una bebida no es plato (no paga envase)
+        return 0
 
 
 class ComboProducto:
