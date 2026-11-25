@@ -42,7 +42,7 @@ class Restaurante:
         return disponibles
 
     def registrar_cliente(self, nombre, celular, correo, password, direccion):
-        # el celular identifica al cliente en buscar_cliente, no puede repetirse
+        # SUPUESTO: el celular identifica al cliente en buscar_cliente, no puede repetirse
         for cliente in self._clientes:
             if cliente.celular == celular:
                 raise ValueError(f"Ya existe un cliente con el celular {celular}")
@@ -67,11 +67,17 @@ class Restaurante:
         return pedido
 
     def crear_pedido_para_llevar(self, cliente):
+        # SUPUESTO: para llevar y delivery necesitan un cliente (nombre y celular)
+        if cliente is None:
+            raise ValueError("El pedido para llevar necesita un cliente registrado")
         pedido = PedidoLlevar(cliente)
         self._pedidos.append(pedido)
         return pedido
 
     def crear_pedido_delivery(self, cliente, zona, direccion_ent):
+        # SUPUESTO: para llevar y delivery necesitan un cliente (nombre y celular)
+        if cliente is None:
+            raise ValueError("El pedido delivery necesita un cliente registrado")
         # PedidoDelivery valida la zona y la direccion
         pedido = PedidoDelivery(cliente, zona, direccion_ent)
         self._pedidos.append(pedido)
@@ -109,14 +115,18 @@ class Restaurante:
                 if tipo not in reporte:
                     reporte[tipo] = {"pedidos": 0, "total": 0}
                 reporte[tipo]["pedidos"] = reporte[tipo]["pedidos"] + 1
-                reporte[tipo]["total"] = round(reporte[tipo]["total"] + pedido.calcular_total(), 2)
+                # SUPUESTO: se suma lo cobrado (calcular_monto del pago), que incluye la comision de tarjeta
+                cobrado = pedido.pago.calcular_monto()
+                reporte[tipo]["total"] = round(reporte[tipo]["total"] + cobrado, 2)
         return reporte
 
     def top_productos(self, cantidad):
-        # cuenta las unidades vendidas de cada producto en los pedidos pagados: [[producto, unidades], ...]
+        # cuenta las unidades vendidas de cada producto: [[producto, unidades], ...]
+        # SUPUESTO: igual que el reporte, solo pedidos pagados de hoy
+        hoy = datetime.now().date()
         conteo = []
         for pedido in self._pedidos:
-            if pedido.esta_pagado():
+            if pedido.esta_pagado() and pedido.fecha_hora.date() == hoy:
                 for item in pedido.items:
                     encontrado = False
                     for par in conteo:

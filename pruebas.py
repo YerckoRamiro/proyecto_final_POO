@@ -217,6 +217,17 @@ try:
     assert False, "zona invalida deberia fallar"
 except ValueError:
     pass
+# SUPUESTO: para llevar y delivery necesitan cliente
+try:
+    restaurante.crear_pedido_para_llevar(None)
+    assert False, "para llevar sin cliente deberia fallar"
+except ValueError:
+    pass
+try:
+    restaurante.crear_pedido_delivery(None, "Cercado", "Calle 1")
+    assert False, "delivery sin cliente deberia fallar"
+except ValueError:
+    pass
 # al cancelar, la mesa se libera
 r_local.cancelar()
 r_local_2 = restaurante.crear_pedido_local(5)
@@ -226,12 +237,13 @@ assert r_local_2.mesa == 5
 # pago de mentira SOLO para probar Restaurante mientras pagos.py es el esqueleto
 # (cuando se una el codigo de Anahi se cambia por PagoEfectivo, PagoQr y PagoTarjeta)
 class PagoPrueba(Pago):
-    def __init__(self, acepta):
+    def __init__(self, acepta, recargo=0):
         super().__init__("Prueba")
         self._acepta = acepta
+        self._recargo = recargo
 
     def calcular_monto(self):
-        return self._monto_base
+        return round(self._monto_base * (1 + self._recargo), 2)
 
     def procesar_pago(self, total):
         self._monto_base = total
@@ -287,13 +299,14 @@ r_llevar.agregar_producto(r_silpancho, 1)
 r_llevar.cambiar_estado(Pedido.EN_PREPARACION)
 r_llevar.cambiar_estado(Pedido.LISTO)
 r_llevar.cambiar_estado(Pedido.ENTREGADO)
-restaurante.cobrar_pedido(r_llevar.numero, PagoPrueba(False))
+restaurante.cobrar_pedido(r_llevar.numero, PagoPrueba(False, 0.03))
 assert r_llevar.esta_pagado()
 
-# reporte del dia por tipo: solo pagados (delivery 97 y para llevar 35 + 2 de envase = 37)
+# reporte del dia por tipo, solo pagados y con lo cobrado (SUPUESTO: incluye la comision)
+# delivery 97; para llevar (35 + 2 de envase) * 1.03 = 38.11
 r_reporte = restaurante.reporte_ventas_dia()
 assert r_reporte["Delivery"] == {"pedidos": 1, "total": 97.00}
-assert r_reporte["Para llevar"] == {"pedidos": 1, "total": 37.00}
+assert r_reporte["Para llevar"] == {"pedidos": 1, "total": 38.11}
 assert "Local" not in r_reporte  # el local cancelado y el abierto no se pagaron
 
 # top de productos: un pedido sin pagar no cuenta
