@@ -80,6 +80,10 @@ Cada uno va en una constante o método con el comentario `# SUPUESTO:`, y el REA
 2. El chicharrón sigue vendiéndose solo los domingos (regla base; la variante D no la reemplaza).
 3. El 5 % del pedido local se calcula sobre el subtotal y cuenta los platos dentro de combos (usa `contar_platos()`).
 4. El pedido mínimo de Bs 60 del delivery se mide sobre el subtotal, sin el envío.
+5. El celular identifica al cliente: `registrar_cliente` rechaza un celular repetido.
+6. `reporte_ventas_dia()` y `top_productos()` cuentan solo pedidos pagados del día.
+7. El total del reporte suma lo cobrado (`pedido.pago.calcular_monto()`), incluida la comisión de tarjeta.
+8. Para llevar y delivery necesitan un cliente (`crear_pedido_para_llevar` y `crear_pedido_delivery` rechazan `None`); el local puede no tenerlo.
 
 ## Modelo de clases (nombres exactos)
 Estructura: `modelo/productos.py`, `modelo/pedidos.py`, `modelo/pagos.py`, `modelo/clientes.py`, `restaurante.py`, `main.py`, `pruebas.py`.
@@ -134,7 +138,7 @@ Métodos: `registrar_producto(producto)`, `armar_combo(nombre, productos)`, `lis
 `cobrar_pedido(numero, pago)`, `reporte_ventas_dia()` (por tipo de pedido, usando `obtener_tipo()`), `top_productos(cantidad)`.
 Para evitar mesas duplicadas recorre los pedidos y llama a `ocupa_mesa(mesa)` (sin isinstance).
 Se puede cobrar un pedido LISTO o ENTREGADO (confirmado), no cancelado, no pagado y que `puede_pagar_con(pago)`.
-El reporte y el top 3 cuentan solo pedidos pagados.
+El reporte y el top 3 cuentan solo pedidos pagados del día (supuestos 5 a 8).
 
 ### main.py
 Menú de consola numerado con `while`. Opciones: registrar producto, armar combo, listar menú por día, registrar cliente,

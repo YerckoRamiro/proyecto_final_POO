@@ -16,3 +16,7 @@ Se tomó la lectura literal de la consigna. Cada supuesto está en una constante
 2. El chicharrón sigue vendiéndose solo los domingos (regla base).
 3. El 5 % del pedido local se calcula sobre el subtotal y cuenta los platos que están dentro de combos.
 4. El pedido mínimo de Bs 60 del delivery se mide sobre el subtotal, sin el envío.
+5. El celular identifica al cliente: no se pueden registrar dos clientes con el mismo celular (decidido el 25/11/2026).
+6. El reporte de ventas y el top 3 de productos cuentan solo los pedidos pagados del día (decidido el 25/11/2026).
+7. El total del reporte de ventas suma lo cobrado a cada pedido, incluida la comisión del 3 % de tarjeta (decidido el 25/11/2026).
+8. Los pedidos para llevar y delivery necesitan un cliente registrado (nombre y celular); el pedido local puede no tenerlo (decidido el 25/11/2026).
