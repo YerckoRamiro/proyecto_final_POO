@@ -8,9 +8,13 @@ class PedidoProducto:
     CANTIDAD_MAX = 20
 
     def __init__(self, pedido, producto, cantidad):
+        if cantidad < self.CANTIDAD_MIN or cantidad > self.CANTIDAD_MAX:
+            raise ValueError(
+                f"La cantidad debe estar entre {self.CANTIDAD_MIN} y {self.CANTIDAD_MAX}."
+            )
         self._pedido = pedido
         self._producto = producto
-        self.cantidad = cantidad
+        self._cantidad = cantidad
 
     @property
     def pedido(self):
@@ -24,17 +28,13 @@ class PedidoProducto:
     def cantidad(self):
         return self._cantidad
 
-    @cantidad.setter
-    def cantidad(self, valor):
-        if valor < self.CANTIDAD_MIN or valor > self.CANTIDAD_MAX:
-            raise ValueError("La cantidad debe estar entre 1 y 20.")
-        self._cantidad = valor
-
     def calcular_precio(self):
         return round(self._producto.calcular_precio() * self._cantidad, 2)
 
     def contar_platos(self):
         return self._producto.contar_platos() * self._cantidad
+
+
 class Pedido(ABC):
     REGISTRADO = "REGISTRADO"
     EN_PREPARACION = "EN_PREPARACION"
@@ -54,15 +54,18 @@ class Pedido(ABC):
     _contador = 0
 
     def __init__(self, cliente, dia=None):
+        fecha_actual = datetime.now()
+        # el dia sale de la fecha actual, pero se puede pasar uno para probar
+        if dia is None:
+            dia = DIAS_SEMANA[fecha_actual.weekday()]
+        if dia not in DIAS_SEMANA:
+            raise ValueError(f"El dia '{dia}' no es valido.")
         Pedido._contador = Pedido._contador + 1
         self._numero = Pedido._contador
         self._cliente = cliente
         self._estado = Pedido.REGISTRADO
         self._items = []
-        self._fecha_hora = datetime.now()
-        # el dia sale de la fecha actual, pero se puede pasar uno para probar
-        if dia is None:
-            dia = DIAS_SEMANA[self._fecha_hora.weekday()]
+        self._fecha_hora = fecha_actual
         self._dia = dia
         self._pago = None
 
@@ -98,10 +101,15 @@ class Pedido(ABC):
         if self._estado != Pedido.REGISTRADO:
             raise ValueError("Solo se pueden agregar productos cuando el pedido esta REGISTRADO.")
         if not producto.esta_disponible(self._dia):
-            raise ValueError("El producto no esta disponible el dia " + self._dia + ".")
-        for item in self._items:
-            if item.producto is producto:
-                item.cantidad = item.cantidad + cantidad
+            raise ValueError(f"El producto no esta disponible el dia {self._dia}.")
+        if cantidad < PedidoProducto.CANTIDAD_MIN:
+            raise ValueError(
+                f"La cantidad debe ser al menos {PedidoProducto.CANTIDAD_MIN}."
+            )
+        for i in range(len(self._items)):
+            if self._items[i].producto is producto:
+                nueva_cantidad = self._items[i].cantidad + cantidad
+                self._items[i] = PedidoProducto(self, producto, nueva_cantidad)
                 return
         nuevo_item = PedidoProducto(self, producto, cantidad)
         self._items.append(nuevo_item)
@@ -134,7 +142,7 @@ class Pedido(ABC):
     def cambiar_estado(self, nuevo):
         permitidos = Pedido.TRANSICIONES[self._estado]
         if nuevo not in permitidos:
-            raise ValueError("No se puede cambiar de " + self._estado + " a " + nuevo + ".")
+            raise ValueError(f"No se puede cambiar de {self._estado} a {nuevo}.")
         if nuevo == Pedido.EN_PREPARACION:
             if len(self._items) == 0:
                 raise ValueError("El pedido debe tener al menos un producto para pasar a preparacion.")
@@ -158,6 +166,10 @@ class Pedido(ABC):
     def marcar_pagado(self, pago):
         if self.esta_pagado():
             raise ValueError("El pedido ya fue pagado.")
+        if self._estado != Pedido.LISTO and self._estado != Pedido.ENTREGADO:
+            raise ValueError("Solo se puede pagar un pedido cuando esta LISTO o ENTREGADO.")
+        if not self.puede_pagar_con(pago):
+            raise ValueError("Este pedido no acepta el metodo de pago elegido.")
         self._pago = pago
 
     def esta_pagado(self):
@@ -178,6 +190,8 @@ class Pedido(ABC):
     @abstractmethod
     def validar_para_preparar(self):
         pass
+
+
 class PedidoLocal(Pedido):
     _mesa_min = 1
     _mesa_max = 15
@@ -212,7 +226,9 @@ class PedidoLocal(Pedido):
     @mesa.setter
     def mesa(self, valor):
         if valor < self._mesa_min or valor > self._mesa_max:
-            raise ValueError("La mesa debe estar entre 1 y 15.")
+            raise ValueError(
+                f"La mesa debe estar entre {self._mesa_min} y {self._mesa_max}."
+            )
         self._mesa = valor
 
     def calcular_cargos(self):
@@ -235,6 +251,8 @@ class PedidoLocal(Pedido):
     def ocupa_mesa(self, mesa):
         # misma mesa y pedido abierto
         return self._mesa == mesa and self.esta_abierto()
+
+
 class PedidoLlevar(Pedido):
     _costo_envase = 2  # Bs por plato
 
@@ -258,6 +276,8 @@ class PedidoLlevar(Pedido):
     def validar_para_preparar(self):
         # no requiere validaciones adicionales
         pass
+
+
 class PedidoDelivery(Pedido):
     ZONAS = {"Cercado": 8, "Quillacollo": 15, "Sacaba": 15, "Vinto": 20}
     # SUPUESTO: el minimo se mide sobre el subtotal, sin el envio
@@ -305,7 +325,9 @@ class PedidoDelivery(Pedido):
     def validar_para_preparar(self):
         # exige subtotal >= pedido_minimo
         if self.calcular_subtotal() < self._pedido_minimo:
-            raise ValueError("El pedido minimo para delivery es de Bs 60.")
+            raise ValueError(
+                f"El pedido minimo para delivery es de Bs {self._pedido_minimo}."
+            )
 
     def puede_pagar_con(self, pago):
         # pago.acepta_delivery()
