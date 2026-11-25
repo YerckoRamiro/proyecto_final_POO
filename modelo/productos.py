@@ -164,6 +164,9 @@ class Combo(Producto):
     _descuento = 0.15
 
     def __init__(self, nombre, productos):
+        # se valida antes de super() para que el error diga lo que de verdad pasa
+        if len(productos) < Combo.MIN_PRODUCTOS:
+            raise ValueError(f"Un combo necesita al menos {Combo.MIN_PRODUCTOS} productos")
         # Opcion 1: al padre le pasamos la suma inicial (asi valida precio > 0),
         # pero el precio real del combo se calcula en vivo en calcular_precio()
         suma = 0
@@ -171,7 +174,8 @@ class Combo(Producto):
             suma = suma + producto.calcular_precio()
         super().__init__(nombre, suma)
         self._productos = []
-        # Bloque 1: validar minimo MIN_PRODUCTOS y agregar cada producto con agregar_producto()
+        for producto in productos:
+            self.agregar_producto(producto)
 
     @property
     def descuento(self):
@@ -186,29 +190,59 @@ class Combo(Producto):
         return list(self._productos)
 
     def agregar_producto(self, producto, cantidad=1):
-        # no puede contenerse a si mismo (usar producto.contiene_a(self))
-        pass
+        # si el producto ya me contiene (directa o indirectamente), agregarlo haria un ciclo
+        if producto.contiene_a(self):
+            raise ValueError("Un combo no puede contenerse a si mismo")
+        for linea in self._productos:
+            if linea.producto is producto:
+                linea.cantidad = linea.cantidad + cantidad
+                return
+        self._productos.append(ComboProducto(producto, cantidad))
 
     def quitar_producto(self, producto):
-        # nunca menos de MIN_PRODUCTOS
-        pass
+        for linea in self._productos:
+            if linea.producto is producto:
+                if self.contar_productos() - linea.cantidad < Combo.MIN_PRODUCTOS:
+                    raise ValueError(f"Un combo no puede quedar con menos de {Combo.MIN_PRODUCTOS} productos")
+                self._productos.remove(linea)
+                return
+        raise ValueError(f"{producto.nombre} no esta en el combo")
 
     def contar_productos(self):
-        # suma la cantidad de cada ComboProducto (se usa para MIN_PRODUCTOS y min_producto)
-        pass
+        # se cuentan unidades: 2 silpanchos = 2 productos (ver SUPUESTO arriba)
+        total = 0
+        for linea in self._productos:
+            total = total + linea.cantidad
+        return total
 
     def calcular_precio(self):
-        # suma de cada ComboProducto * (1 - descuento) si contar_productos() >= min_producto
-        pass
+        # cada hijo calcula su propio precio, aunque sea otro combo (polimorfismo)
+        suma = 0
+        for linea in self._productos:
+            suma = suma + linea.calcular_precio()
+        if self.contar_productos() >= self._min_producto:
+            suma = suma * (1 - self._descuento)
+        return round(suma, 2)
 
     def esta_disponible(self, dia):
         # disponible solo si todos sus productos lo estan
-        pass
+        for linea in self._productos:
+            if not linea.producto.esta_disponible(dia):
+                return False
+        return True
 
     def contar_platos(self):
-        # suma de los platos de sus productos
-        pass
+        # los platos dentro del combo pagan envase; las bebidas suman 0
+        total = 0
+        for linea in self._productos:
+            total = total + linea.contar_platos()
+        return total
 
     def contiene_a(self, producto):
-        # self is producto o algun hijo lo contiene (evita ciclos)
-        pass
+        if self is producto:
+            return True
+        # busca en los hijos; si un hijo es combo, el busca en los suyos
+        for linea in self._productos:
+            if linea.producto.contiene_a(producto):
+                return True
+        return False
