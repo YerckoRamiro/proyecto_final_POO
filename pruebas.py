@@ -467,6 +467,12 @@ try:
     assert False, "zona invalida deberia fallar"
 except ValueError:
     pass
+# un celular invalido tambien se rechaza al registrar el cliente
+try:
+    restaurante.registrar_cliente("Beto", "51234567", "beto@correo.com", "x", "Calle 3")
+    assert False, "celular que empieza en 5 deberia fallar"
+except ValueError:
+    pass
 # SUPUESTO: para llevar y delivery necesitan cliente
 try:
     restaurante.crear_pedido_para_llevar(None)
@@ -484,32 +490,13 @@ r_local_2 = restaurante.crear_pedido_local(5)
 assert r_local_2.mesa == 5
 
 
-# pago de mentira SOLO para probar Restaurante mientras pagos.py es el esqueleto
-# (cuando se una el codigo de Anahi se cambia por PagoEfectivo, PagoQr y PagoTarjeta)
-class PagoPrueba(Pago):
-    def __init__(self, acepta, recargo=0):
-        super().__init__("Prueba")
-        self._acepta = acepta
-        self._recargo = recargo
-
-    def calcular_monto(self):
-        return round(self._monto_base * (1 + self._recargo), 2)
-
-    def procesar_pago(self, total):
-        self._monto_base = total
-        return f"Total: Bs {total:.2f}"
-
-    def acepta_delivery(self):
-        return self._acepta
-
-
 # delivery a Quillacollo con 2 combos clasicos: 82 + 15 = Bs 97
 r_delivery.agregar_producto(r_combo, 2)
 assert r_delivery.calcular_total() == 97.00
 
 # no se cobra en REGISTRADO
 try:
-    restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(True))
+    restaurante.cobrar_pedido(r_delivery.numero, PagoQr("1234567890"))
     assert False, "no se cobra un pedido REGISTRADO"
 except ValueError:
     pass
@@ -517,39 +504,49 @@ except ValueError:
 r_delivery.cambiar_estado(Pedido.EN_PREPARACION)
 r_delivery.cambiar_estado(Pedido.LISTO)
 
-# un pago que no acepta delivery se rechaza y el pedido sigue sin pagar
+# la tarjeta no se acepta en delivery y el pedido sigue sin pagar
 try:
-    restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(False))
-    assert False, "el delivery deberia rechazar este pago"
+    restaurante.cobrar_pedido(r_delivery.numero, PagoTarjeta())
+    assert False, "el delivery deberia rechazar la tarjeta"
 except ValueError:
     pass
 assert not r_delivery.esta_pagado()
 
-# cobro correcto en LISTO: devuelve el comprobante y marca el pedido como pagado
-r_comprobante = restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(True))
+# efectivo insuficiente: falla y el pedido sigue sin pagar
+try:
+    restaurante.cobrar_pedido(r_delivery.numero, PagoEfectivo(50))
+    assert False, "el efectivo no alcanza para Bs 97"
+except ValueError:
+    pass
+assert not r_delivery.esta_pagado()
+
+# cobro correcto en LISTO con QR: devuelve el comprobante y marca el pedido como pagado
+r_comprobante = restaurante.cobrar_pedido(r_delivery.numero, PagoQr("1234567890"))
 assert "97.00" in r_comprobante
+assert "1234567890" in r_comprobante
 assert r_delivery.esta_pagado()
 
 # no se cobra dos veces
 try:
-    restaurante.cobrar_pedido(r_delivery.numero, PagoPrueba(True))
+    restaurante.cobrar_pedido(r_delivery.numero, PagoQr("1234567890"))
     assert False, "no se cobra dos veces"
 except ValueError:
     pass
 
 # no se cobra un pedido cancelado
 try:
-    restaurante.cobrar_pedido(r_local.numero, PagoPrueba(True))
+    restaurante.cobrar_pedido(r_local.numero, PagoQr("1234567890"))
     assert False, "no se cobra un pedido cancelado"
 except ValueError:
     pass
 
-# tambien se cobra en ENTREGADO
+# tambien se cobra en ENTREGADO, aqui con tarjeta (37 + 3 % = 38.11)
 r_llevar.agregar_producto(r_silpancho, 1)
 r_llevar.cambiar_estado(Pedido.EN_PREPARACION)
 r_llevar.cambiar_estado(Pedido.LISTO)
 r_llevar.cambiar_estado(Pedido.ENTREGADO)
-restaurante.cobrar_pedido(r_llevar.numero, PagoPrueba(False, 0.03))
+r_comprobante_tarjeta = restaurante.cobrar_pedido(r_llevar.numero, PagoTarjeta())
+assert "38.11" in r_comprobante_tarjeta
 assert r_llevar.esta_pagado()
 
 # reporte del dia por tipo, solo pagados y con lo cobrado (SUPUESTO: incluye la comision)
