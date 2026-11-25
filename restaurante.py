@@ -1,3 +1,4 @@
+from datetime import datetime
 from modelo.productos import Combo, DIAS_SEMANA
 from modelo.pedidos import Pedido, PedidoLocal, PedidoLlevar, PedidoDelivery
 from modelo.clientes import Cliente
@@ -98,9 +99,39 @@ class Restaurante:
         return f"Pedido N. {numero} ({pedido.obtener_tipo()})\n{comprobante}"
 
     def reporte_ventas_dia(self):
-        # agrupa por obtener_tipo(); solo pedidos pagados
-        pass
+        # {"Local": {"pedidos": 2, "total": 120.5}, ...} solo con pedidos pagados de hoy
+        hoy = datetime.now().date()
+        reporte = {}
+        for pedido in self._pedidos:
+            if pedido.esta_pagado() and pedido.fecha_hora.date() == hoy:
+                # la clave la da cada pedido con obtener_tipo() (sin isinstance)
+                tipo = pedido.obtener_tipo()
+                if tipo not in reporte:
+                    reporte[tipo] = {"pedidos": 0, "total": 0}
+                reporte[tipo]["pedidos"] = reporte[tipo]["pedidos"] + 1
+                reporte[tipo]["total"] = round(reporte[tipo]["total"] + pedido.calcular_total(), 2)
+        return reporte
 
     def top_productos(self, cantidad):
-        # solo pedidos pagados
-        pass
+        # cuenta las unidades vendidas de cada producto en los pedidos pagados: [[producto, unidades], ...]
+        conteo = []
+        for pedido in self._pedidos:
+            if pedido.esta_pagado():
+                for item in pedido.items:
+                    encontrado = False
+                    for par in conteo:
+                        if par[0] is item.producto:
+                            par[1] = par[1] + item.cantidad
+                            encontrado = True
+                    if not encontrado:
+                        conteo.append([item.producto, item.cantidad])
+        # elige el mas vendido, lo saca de la lista y repite
+        top = []
+        while len(top) < cantidad and len(conteo) > 0:
+            mayor = conteo[0]
+            for par in conteo:
+                if par[1] > mayor[1]:
+                    mayor = par
+            top.append(mayor)
+            conteo.remove(mayor)
+        return top

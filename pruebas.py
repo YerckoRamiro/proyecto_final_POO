@@ -290,5 +290,19 @@ r_llevar.cambiar_estado(Pedido.ENTREGADO)
 restaurante.cobrar_pedido(r_llevar.numero, PagoPrueba(False))
 assert r_llevar.esta_pagado()
 
+# reporte del dia por tipo: solo pagados (delivery 97 y para llevar 35 + 2 de envase = 37)
+r_reporte = restaurante.reporte_ventas_dia()
+assert r_reporte["Delivery"] == {"pedidos": 1, "total": 97.00}
+assert r_reporte["Para llevar"] == {"pedidos": 1, "total": 37.00}
+assert "Local" not in r_reporte  # el local cancelado y el abierto no se pagaron
+
+# top de productos: un pedido sin pagar no cuenta
+r_local_2.agregar_producto(r_moco, 10)
+r_top = restaurante.top_productos(3)
+assert len(r_top) == 2
+assert r_top[0][0] is r_combo and r_top[0][1] == 2
+assert r_top[1][0] is r_silpancho and r_top[1][1] == 1
+assert len(restaurante.top_productos(1)) == 1
+
 
 print("Todas las pruebas pasaron")
