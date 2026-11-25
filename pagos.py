@@ -74,21 +74,21 @@ class PagoEfectivo(Pago):
         self._monto_base = round(total, 2)
         self._fecha_hora = datetime.now()
         self._cambio = self.calcular_cambio()
+        fecha = self._fecha_hora.strftime("%d/%m/%Y %H:%M")
         return (
-            "Pago en efectivo\n"
-            "Fecha: " + self._fecha_hora.strftime("%d/%m/%Y %H:%M") + "\n"
-            "Total: Bs " + format(self.calcular_monto(), ".2f") + "\n"
-            "Recibido: Bs " + format(self._monto_recibido, ".2f") + "\n"
-            "Cambio: Bs " + format(self._cambio, ".2f")
+            f"Pago en efectivo\n"
+            f"Fecha: {fecha}\n"
+            f"Total: Bs {self.calcular_monto():.2f}\n"
+            f"Recibido: Bs {self._monto_recibido:.2f}\n"
+            f"Cambio: Bs {self._cambio:.2f}"
         )
 
     def acepta_delivery(self):
-        # SUPUESTO: el efectivo si se acepta en delivery (solo la tarjeta no)
+        # el efectivo se acepta en delivery
         return True
 
 
 class PagoQr(Pago):
-    # SUPUESTO: el codigo de transaccion QR tiene exactamente 10 digitos
     LARGO_CODIGO = 10
 
     def __init__(self, cod_trans):
@@ -104,8 +104,7 @@ class PagoQr(Pago):
         texto = str(valor).strip()
         if len(texto) != self.LARGO_CODIGO or not texto.isdigit():
             raise ValueError(
-                "El codigo de transaccion debe tener exactamente "
-                + str(self.LARGO_CODIGO) + " digitos"
+                f"El codigo de transaccion debe tener exactamente {self.LARGO_CODIGO} digitos"
             )
         self._cod_trans = texto
 
@@ -118,31 +117,36 @@ class PagoQr(Pago):
             raise ValueError("El total a pagar debe ser mayor a 0")
         self._monto_base = round(total, 2)
         self._fecha_hora = datetime.now()
+        fecha = self._fecha_hora.strftime("%d/%m/%Y %H:%M")
         return (
-            "Pago por QR\n"
-            "Fecha: " + self._fecha_hora.strftime("%d/%m/%Y %H:%M") + "\n"
-            "Codigo de transaccion: " + self._cod_trans + "\n"
-            "Total: Bs " + format(self.calcular_monto(), ".2f")
+            f"Pago por QR\n"
+            f"Fecha: {fecha}\n"
+            f"Codigo de transaccion: {self._cod_trans}\n"
+            f"Total: Bs {self.calcular_monto():.2f}"
         )
 
     def acepta_delivery(self):
-        # SUPUESTO: el QR si se acepta en delivery (solo la tarjeta no)
+        # el QR se acepta en delivery
         return True
 
 
 class PagoTarjeta(Pago):
-    # SUPUESTO: la tarjeta cobra un recargo del 3% que paga el cliente
-    RECARGO = 0.03
+    # comision a cargo del cliente (valor de la variante, atributo de clase protegido)
+    _recargo = 0.03
 
     def __init__(self):
         super().__init__("Tarjeta")
 
+    @property
+    def recargo(self):
+        return self._recargo
+
     def calcular_comision(self):
-        # monto_base * RECARGO (la paga el cliente)
-        return round(self._monto_base * self.RECARGO, 2)
+        # monto_base * recargo (la paga el cliente)
+        return round(self._monto_base * self._recargo, 2)
 
     def calcular_monto(self):
-        # monto_base + calcular_comision()
+        # monto_base + comision
         return round(self._monto_base + self.calcular_comision(), 2)
 
     def procesar_pago(self, total):
@@ -150,12 +154,13 @@ class PagoTarjeta(Pago):
             raise ValueError("El total a pagar debe ser mayor a 0")
         self._monto_base = round(total, 2)
         self._fecha_hora = datetime.now()
+        fecha = self._fecha_hora.strftime("%d/%m/%Y %H:%M")
         return (
-            "Pago con tarjeta\n"
-            "Fecha: " + self._fecha_hora.strftime("%d/%m/%Y %H:%M") + "\n"
-            "Subtotal: Bs " + format(self._monto_base, ".2f") + "\n"
-            "Comision: Bs " + format(self.calcular_comision(), ".2f") + "\n"
-            "Total: Bs " + format(self.calcular_monto(), ".2f")
+            f"Pago con tarjeta\n"
+            f"Fecha: {fecha}\n"
+            f"Subtotal: Bs {self._monto_base:.2f}\n"
+            f"Comision: Bs {self.calcular_comision():.2f}\n"
+            f"Total: Bs {self.calcular_monto():.2f}"
         )
 
     def acepta_delivery(self):

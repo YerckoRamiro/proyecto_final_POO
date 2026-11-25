@@ -66,6 +66,7 @@ except ValueError:
 # PagoTarjeta cobra 3% de recargo
 pago = PagoTarjeta()
 pago.procesar_pago(41)
+assert pago.recargo == 0.03
 assert pago.calcular_comision() == 1.23
 assert pago.calcular_monto() == 42.23
 
@@ -75,27 +76,34 @@ assert PagoEfectivo(50).acepta_delivery() is True
 assert PagoQr("1234567890").acepta_delivery() is True
 
 # Cliente valido
-cliente = Cliente("Ana", "71234567")
+cliente = Cliente("Ana", "71234567", "ana@correo.com", "clave123", "Calle Sucre 10")
 assert cliente.nombre == "Ana"
 assert cliente.celular == "71234567"
+assert cliente.correo == "ana@correo.com"
+assert cliente.direccion == "Calle Sucre 10"
+
+# La contrasena se verifica pero no se puede leer
+assert cliente.verificar_password("clave123") is True
+assert cliente.verificar_password("otra") is False
+assert not hasattr(cliente, "password")
 
 # Cliente rechaza nombre vacio
 try:
-    Cliente("", "71234567")
+    Cliente("", "71234567", "ana@correo.com", "clave123", "Calle Sucre 10")
     assert False, "Cliente deberia rechazar un nombre vacio"
 except ValueError:
     pass
 
 # Cliente rechaza celular que no empieza en 6 o 7
 try:
-    Cliente("Ana", "51234567")
+    Cliente("Ana", "51234567", "ana@correo.com", "clave123", "Calle Sucre 10")
     assert False, "Cliente deberia rechazar un celular que empieza en 5"
 except ValueError:
     pass
 
 # Cliente rechaza celular de largo incorrecto
 try:
-    Cliente("Ana", "7123")
+    Cliente("Ana", "7123", "ana@correo.com", "clave123", "Calle Sucre 10")
     assert False, "Cliente deberia rechazar un celular corto"
 except ValueError:
     pass
